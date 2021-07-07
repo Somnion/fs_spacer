@@ -1,16 +1,31 @@
-use std::fs;
-use std::path::PathBuf;
+// extern crate libc;
 
-extern crate libc;
-
-use libc::*;
+// use libc::*;
 use std::ffi::CString;
 use std::ffi::CStr;
-use std::error::Error;
+// use std::error::Error;
 
 use std::path::*;
 use std::mem;
 use std::os::unix::ffi::OsStrExt;
+
+use lazy_static::lazy_static;
+use regex::Regex;
+
+use serde::{Serialize, Deserialize};
+use std::io::Write;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ConfigJSON {
+    pub dirs: Vec<String>,
+}
+
+pub fn yyyy_mm_dd_match(text: &str) -> bool {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r".*(\d{4})\-(\d{2})\-(\d{2})\.log").unwrap();
+    }
+    RE.is_match(text)
+}
 
 
 #[non_exhaustive]
@@ -67,6 +82,22 @@ pub fn get_formatted_space(space: u64) -> Result<String, String> {
         size if size < SpaceUnit::TB => Ok(format!("{} GB", size as u64 / SpaceUnit::GB as u64)),
         size if size >= SpaceUnit::TB => Ok(format!("{} TB", size as u64 / SpaceUnit::TB as u64)),
         _ => Err(format!("Can't process size {} for formatted output", space)),
+    }
+}
+
+pub fn save_dirs(dir_path: &str, file_name: &str, file_content: &str) -> Result<(), String>{
+    use std::fs::OpenOptions;
+
+    let file = format!("{}/{}", dir_path, file_name);
+    let mut file = OpenOptions::new().write(true).create_new(true).open( file );
+    match file {
+        Ok(mut file) => {
+            match file.write(file_content.as_bytes()){
+                Ok(_) => return Ok(()),
+                Err(msg) => return Err(msg.to_string()),
+            }
+        },
+        Err(msg) => return Err(msg.to_string()),
     }
 }
 
