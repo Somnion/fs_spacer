@@ -15,6 +15,12 @@ use regex::Regex;
 use serde::{Serialize, Deserialize};
 use std::io::Write;
 
+use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
+
+pub mod fs_zip;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigJSON {
     pub dirs: Vec<String>,
@@ -99,6 +105,18 @@ pub fn save_dirs(dir_path: &str, file_name: &str, file_content: &str) -> Result<
         },
         Err(msg) => return Err(msg.to_string()),
     }
+}
+
+pub fn read_dirs_from_file<P: AsRef<Path>>(path: P) -> Result<ConfigJSON, Box<Error>> {
+    // Open the file in read-only mode with buffer.
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+
+    // Read the JSON contents of the file as an instance of `ConfigJSON`.
+    let config = serde_json::from_reader(reader)?;
+
+    // Return the `ConfigJSON`.
+    Ok(config)
 }
 
 /*#[cfg(test)]
