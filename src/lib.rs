@@ -11,6 +11,7 @@ use std::os::unix::ffi::OsStrExt;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+use regex::Captures;
 
 use serde::{Serialize, Deserialize};
 use std::io::Write;
@@ -21,18 +22,12 @@ use std::io::BufReader;
 
 pub mod fs_zip;
 
+use fs_zip::*;
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigJSON {
     pub dirs: Vec<String>,
 }
-
-pub fn yyyy_mm_dd_match(text: &str) -> bool {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r".*(\d{4})\-(\d{2})\-(\d{2})\.log").unwrap();
-    }
-    RE.is_match(text)
-}
-
 
 #[non_exhaustive]
 pub struct SpaceUnit;
